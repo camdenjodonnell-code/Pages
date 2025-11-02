@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  username   String   @unique
+  email      String   @unique
+  bio        String?
+  avatar     String?
+  reviews    Review[]
+  lists      List[]
+  followers  Follow[] @relation("followers")
+  following  Follow[] @relation("following")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Book {
+  id              String         @id @default(cuid())
+  title           String
+  author          String
+  coverImage      String?
+  genre           String?
+  description     String?
+  publicationDate DateTime?
+  reviews         Review[]
+  lists           ListsOnBooks[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    String
+  rating    Int
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model List {
+  id          String         @id @default(cuid())
+  user        User           @relation(fields: [userId], references: [id])
+  userId      String
+  title       String
+  description String?
+  books       ListsOnBooks[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ListsOnBooks {
+  list   List @relation(fields: [listId], references: [id])
+  listId String
+  book   Book @relation(fields: [bookId], references: [id])
+  bookId String
+
+  addedAt DateTime @default(now())
+
+  @@id([listId, bookId])
+}
+
+model Follow {
+  follower    User @relation("followers", fields: [followerId], references: [id])
+  followerId  String
+  following   User @relation("following", fields: [followingId], references: [id])
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
